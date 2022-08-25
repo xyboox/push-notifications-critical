@@ -34,16 +34,17 @@ public class PushNotificationsHandler: NSObject, NotificationHandlerProtocol {
 
             optionsArray.forEach { option in
                 switch option {
-                case "alert":
-                    presentationOptions.insert(.alert)
-                case "badge":
-                    presentationOptions.insert(.badge)
+                    case "alert":
+                        presentationOptions.insert(.alert)
+                    case "badge":
+                        presentationOptions.insert(.badge)
 
-                case "sound":
-                    presentationOptions.insert(.sound)
-                default:
-                    print("Unrecogizned presentation option: \(option)")
-                }
+                    case "sound":
+                        presentationOptions.insert(.sound)
+                    
+                    default:
+                        print("Unrecogizned presentation option: \(option)")
+                    }
             }
 
             return presentationOptions
