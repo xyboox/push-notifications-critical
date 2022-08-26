@@ -6,7 +6,15 @@ public class PushNotificationsHandler: NSObject, NotificationHandlerProtocol {
     var notificationRequestLookup = [String: JSObject]()
 
     public func requestPermissions(with completion: ((Bool, Error?) -> Void)? = nil) {
-        UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound, .badge, .criticalAlert]) { granted, error in
+        let options: UNAuthorizationOptions
+                
+        if #available(iOS 12.0, *) {
+            options = [.alert, .badge, .sound, .criticalAlert]
+        } else {
+            options = [.alert, .badge, .sound]
+        }
+        
+        UNUserNotificationCenter.current().requestAuthorization(options: options) { granted, error in
             completion?(granted, error)
         }
     }
