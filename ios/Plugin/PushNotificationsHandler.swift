@@ -7,13 +7,13 @@ public class PushNotificationsHandler: NSObject, NotificationHandlerProtocol {
 
     public func requestPermissions(with completion: ((Bool, Error?) -> Void)? = nil) {
         let options: UNAuthorizationOptions
-                
+
         if #available(iOS 12.0, *) {
             options = [.alert, .badge, .sound, .criticalAlert]
         } else {
             options = [.alert, .badge, .sound]
         }
-        
+
         UNUserNotificationCenter.current().requestAuthorization(options: options) { granted, error in
             completion?(granted, error)
         }
@@ -27,32 +27,33 @@ public class PushNotificationsHandler: NSObject, NotificationHandlerProtocol {
 
     public func willPresent(notification: UNNotification) -> UNNotificationPresentationOptions {
         let notificationData = makeNotificationRequestJSObject(notification.request)
-        self.plugin?.notifyListeners("pushNotificationReceived", data: notificationData)
+        plugin?.notifyListeners("pushNotificationReceived", data: notificationData)
 
         if let options = notificationRequestLookup[notification.request.identifier] {
             let silent = options["silent"] as? Bool ?? false
 
             if silent {
-                return UNNotificationPresentationOptions.init(rawValue: 0)
+                return UNNotificationPresentationOptions(rawValue: 0)
             }
         }
 
-        if let optionsArray = self.plugin?.getConfig().getArray("presentationOptions") as? [String] {
-            var presentationOptions = UNNotificationPresentationOptions.init()
+        if let optionsArray = plugin?.getConfig().getArray("presentationOptions") as? [String] {
+            var presentationOptions = UNNotificationPresentationOptions()
 
             optionsArray.forEach { option in
                 switch option {
-                    case "alert":
-                        presentationOptions.insert(.alert)
-                    case "badge":
-                        presentationOptions.insert(.badge)
+                case "alert":
+                    presentationOptions.insert(.alert)
 
-                    case "sound":
-                        presentationOptions.insert(.sound)
-                    
-                    default:
-                        print("Unrecogizned presentation option: \(option)")
-                    }
+                case "badge":
+                    presentationOptions.insert(.badge)
+
+                case "sound":
+                    presentationOptions.insert(.sound)
+
+                default:
+                    print("Unrecogizned presentation option: \(option)")
+                }
             }
 
             return presentationOptions
@@ -81,8 +82,7 @@ public class PushNotificationsHandler: NSObject, NotificationHandlerProtocol {
 
         data["notification"] = makeNotificationRequestJSObject(originalNotificationRequest)
 
-        self.plugin?.notifyListeners("pushNotificationActionPerformed", data: data, retainUntilConsumed: true)
-
+        plugin?.notifyListeners("pushNotificationActionPerformed", data: data, retainUntilConsumed: true)
     }
 
     func makeNotificationRequestJSObject(_ request: UNNotificationRequest) -> JSObject {
@@ -92,7 +92,7 @@ public class PushNotificationsHandler: NSObject, NotificationHandlerProtocol {
             "subtitle": request.content.subtitle,
             "badge": request.content.badge ?? 1,
             "body": request.content.body,
-            "data": JSTypes.coerceDictionaryToJSObject(request.content.userInfo) ?? [:]
+            "data": JSTypes.coerceDictionaryToJSObject(request.content.userInfo) ?? [:],
         ]
     }
 }

@@ -1,5 +1,5 @@
-import Foundation
 import Capacitor
+import Foundation
 import UserNotifications
 
 enum PushNotificationError: Error {
@@ -19,16 +19,16 @@ public class PushNotificationsPlugin: CAPPlugin {
     private var appDelegateRegistrationCalled: Bool = false
 
     override public func load() {
-        self.bridge?.notificationRouter.pushNotificationHandler = self.notificationDelegateHandler
-        self.notificationDelegateHandler.plugin = self
+        bridge?.notificationRouter.pushNotificationHandler = notificationDelegateHandler
+        notificationDelegateHandler.plugin = self
 
         NotificationCenter.default.addObserver(self,
-                                               selector: #selector(self.didRegisterForRemoteNotificationsWithDeviceToken(notification:)),
+                                               selector: #selector(didRegisterForRemoteNotificationsWithDeviceToken(notification:)),
                                                name: .capacitorDidRegisterForRemoteNotifications,
                                                object: nil)
 
         NotificationCenter.default.addObserver(self,
-                                               selector: #selector(self.didFailToRegisterForRemoteNotificationsWithError(notification:)),
+                                               selector: #selector(didFailToRegisterForRemoteNotificationsWithError(notification:)),
                                                name: .capacitorDidFailToRegisterForRemoteNotifications,
                                                object: nil)
     }
@@ -51,7 +51,7 @@ public class PushNotificationsPlugin: CAPPlugin {
      * Request notification permission
      */
     @objc override public func requestPermissions(_ call: CAPPluginCall) {
-        self.notificationDelegateHandler.requestPermissions { granted, error in
+        notificationDelegateHandler.requestPermissions { granted, error in
             guard error == nil else {
                 if let err = error {
                     call.reject(err.localizedDescription)
@@ -76,7 +76,7 @@ public class PushNotificationsPlugin: CAPPlugin {
      * Check notification permission
      */
     @objc override public func checkPermissions(_ call: CAPPluginCall) {
-        self.notificationDelegateHandler.checkPermissions { status in
+        notificationDelegateHandler.checkPermissions { status in
             var result: PushNotificationsPermissions = .prompt
 
             switch status {
@@ -102,12 +102,12 @@ public class PushNotificationsPlugin: CAPPlugin {
             call.reject("event capacitorDidRegisterForRemoteNotifications not called.  Visit https://capacitorjs.com/docs/apis/push-notifications for more information")
             return
         }
-        UNUserNotificationCenter.current().getDeliveredNotifications(completionHandler: { (notifications) in
-            let ret = notifications.map({ (notification) -> [String: Any] in
-                return self.notificationDelegateHandler.makeNotificationRequestJSObject(notification.request)
-            })
+        UNUserNotificationCenter.current().getDeliveredNotifications(completionHandler: { notifications in
+            let ret = notifications.map { notification -> [String: Any] in
+                self.notificationDelegateHandler.makeNotificationRequestJSObject(notification.request)
+            }
             call.resolve([
-                "notifications": ret
+                "notifications": ret,
             ])
         })
     }
@@ -139,9 +139,9 @@ public class PushNotificationsPlugin: CAPPlugin {
             return
         }
         UNUserNotificationCenter.current().removeAllDeliveredNotifications()
-        DispatchQueue.main.async(execute: {
+        DispatchQueue.main.async {
             UIApplication.shared.applicationIconBadgeNumber = 0
-        })
+        }
         call.resolve()
     }
 
@@ -160,17 +160,17 @@ public class PushNotificationsPlugin: CAPPlugin {
     @objc public func didRegisterForRemoteNotificationsWithDeviceToken(notification: NSNotification) {
         appDelegateRegistrationCalled = true
         if let deviceToken = notification.object as? Data {
-            let deviceTokenString = deviceToken.reduce("", {$0 + String(format: "%02X", $1)})
+            let deviceTokenString = deviceToken.reduce("") { $0 + String(format: "%02X", $1) }
             notifyListeners("registration", data: [
-                "value": deviceTokenString
+                "value": deviceTokenString,
             ])
         } else if let stringToken = notification.object as? String {
             notifyListeners("registration", data: [
-                "value": stringToken
+                "value": stringToken,
             ])
         } else {
             notifyListeners("registrationError", data: [
-                "error": PushNotificationError.tokenParsingFailed.localizedDescription
+                "error": PushNotificationError.tokenParsingFailed.localizedDescription,
             ])
         }
     }
@@ -181,7 +181,7 @@ public class PushNotificationsPlugin: CAPPlugin {
             return
         }
         notifyListeners("registrationError", data: [
-            "error": error.localizedDescription
+            "error": error.localizedDescription,
         ])
     }
 }
