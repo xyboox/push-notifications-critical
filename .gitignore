@@ -31,4 +31,5 @@ npm-debug.log*
 
 /ios/Pods
 
-
+/v*/node_modules
+/v*/dist
